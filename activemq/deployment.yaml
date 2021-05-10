@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name:  activemq
+  namespace: geoserver-cluster
+  labels:
+    app: activemq
+spec:
+  selector:
+    matchLabels:
+      app: activemq
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: activemq
+    spec:
+      # initContainers:
+        # Init containers are exactly like regular containers, except:
+          # - Init containers always run to completion.
+          # - Each init container must complete successfully before the next one starts.
+      containers:
+      - name:  activemq
+        image:  home-docker.sandbox.local:5000/activemq:latest
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 200m
+            memory: 500Mi
+          limits:
+            cpu: 400m
+            memory: 1000Mi
+        # livenessProbe:
+#          tcpSocket:
+#            port: 61616
+        #   initialDelaySeconds: 5
+        #   timeoutSeconds: 5
+        #   successThreshold: 1
+        #   failureThreshold: 3
+        #   periodSeconds: 10
+        # readinessProbe:
+#          httpGet:
+#            path: /_status/healthz
+#            port: 8161
+          # initialDelaySeconds: 5
+          # timeoutSeconds: 2
+          # successThreshold: 1
+          # failureThreshold: 3
+          # periodSeconds: 10
+        ports:
+        - containerPort:  8161
+          name:  web-console
+        - containerPort: 61616
+          name: tcp-connection
+        volumeMounts:
+        - name: active-creds
+          mountPath: /opt/apache-activemq-5.16.0/conf/jetty-realm.properties
+          subPath: jetty-realm.properties
+      volumes:
+        - name: active-creds
+          secret:
+            secretName: creds
+      restartPolicy: Always

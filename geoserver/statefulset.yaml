@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: geoserver
+  namespace: geoserver-cluster
+spec:
+  selector:
+    matchLabels:
+      app: geoserver # has to match .spec.template.metadata.labels
+  serviceName: "geoserver"
+  replicas: 3 # by default is 1
+  template:
+    metadata:
+      labels:
+        app: geoserver # has to match .spec.selector.matchLabels
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: geoserver
+        image: home-docker.sandbox.local:5000/geoserver:latest
+        ports:
+        - containerPort: 8080
+          name: web
+        volumeMounts:
+        - name: broker-properties
+          mountPath: /geoserver/geoserver/data_dir/cluster/cluster.properties
+          subPath: cluster.properties
+        volumes:
+          - name: broker-properties
+            secret:
+              secretName: brokerproperties
+ 
